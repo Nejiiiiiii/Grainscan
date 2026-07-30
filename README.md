@@ -1,4 +1,4 @@
-# GrainScan
+# GrainScan: Automated Quality Inspection with Image Processing and Data Analytics
 
 <p align="center">
   <img src="GUI/Mark%20Generation.png" alt="GrainScan — Automated Rice Quality Inspection" width="100%">
