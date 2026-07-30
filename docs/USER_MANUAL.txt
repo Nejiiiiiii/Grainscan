@@ -1,0 +1,1501 @@
+# GrainScan User Manual
+## Automated Rice Quality Inspection and Data Analytics
+
+**Version:** 1.0  
+**Last Updated:** December 2025
+
+---
+
+## Table of Contents
+1. [Introduction](#1-introduction)
+2. [System Overview](#2-system-overview)
+3. [Getting Started](#3-getting-started)
+4. [Main Features](#4-main-features)
+5. [Step-by-Step Guides](#5-step-by-step-guides)
+6. [Quality Assessment System](#6-quality-assessment-system)
+7. [Model Training & Fine-Tuning](#7-model-training--fine-tuning)
+8. [Reports & Analytics](#8-reports--analytics)
+9. [Troubleshooting](#9-troubleshooting)
+10. [Technical Reference](#10-technical-reference)
+
+---
+
+## 1. Introduction
+
+### 1.1 What is GrainScan?
+
+GrainScan is an advanced automated rice quality inspection system that uses AI-powered computer vision to analyze rice grain samples. The system provides:
+- **Automated Detection**: Uses YOLOv8 instance segmentation to detect and classify individual rice grains
+- **Quality Assessment**: Grades rice samples as High, Medium, or Low quality
+- **Comprehensive Analytics**: Provides detailed statistics and visualizations
+- **Batch Processing**: Analyze multiple images simultaneously
+- **Live Camera Support**: Real-time grain capture and analysis
+- **Custom Model Training**: Fine-tune models with your own data
+
+### 1.2 Who Should Use This Manual?
+
+This manual is designed for:
+- Quality control inspectors
+- Rice mill operators
+- Agricultural researchers
+- Food processing facility managers
+- Anyone involved in rice quality assessment
+
+### 1.3 System Requirements
+
+**Minimum Requirements:**
+- **Operating System**: Windows 10 or later
+- **Python**: Version 3.8 or higher
+- **RAM**: 8GB minimum (16GB recommended)
+- **Storage**: 2GB free space
+- **Camera**: USB webcam (optional, for live capture)
+- **GPU**: NVIDIA GPU with CUDA support (Optional for faster processing/slow on CPU)
+
+**Required Python Libraries:**
+- ultralytics (YOLOv8)
+- opencv-python
+- pandas
+- matplotlib
+- pillow
+- openpyxl (for Excel export)
+
+---
+
+## 2. System Overview
+
+### 2.1 Architecture
+
+The GrainScan system consists of five main modules:
+
+```
+┌─────────────────────────────────────────────────┐
+│              GrainScan GUI (test_gui.py)        │
+│  - User Interface                               │
+│  - Navigation & Controls                        │
+└───────────────┬─────────────────────────────────┘
+                │
+    ┌───────────┴────────────┬────────────────────┐
+    │                        │                     │
+┌───▼───────────┐  ┌────────▼──────┐  ┌──────────▼─────┐
+│ Image         │  │ Live Camera   │  │ Model Training │
+│ Processing    │  │ Module        │  │ Module         │
+│ (test_main.py)│  │(live_camera.py)│  │ (integrated)   │
+└───────┬───────┘  └────────┬──────┘  └────────────────┘
+        │                   │
+        └─────────┬─────────┘
+                  │
+         ┌────────▼─────────┐
+         │ Quality Assessment│
+         │ (quality_        │
+         │  assessment.py)  │
+         └──────────────────┘
+```
+
+### 2.2 Rice Grain Classification
+
+The system classifies rice grains into **5 categories**:
+
+| Category | Description | Color Code |
+|----------|-------------|------------|
+| **Long** | Length 6.61-7.50mm, premium quality | 🟢 Green |
+| **Medium** | Length 5.51-6.60mm, standard quality | 🟠 Orange |
+| **Short** | Length < 5.50mm, sub-standard quality | 🔵 Blue |
+| **Broken** | Broken/fragmented grains | 🔴 Red |
+| **Discolored** | Discolored/damaged grains | 🟣 Purple |
+
+### 2.3 Quality Grading System
+
+Rice samples are graded using a comprehensive scoring algorithm:
+
+**High Quality:**
+- ≥80% dominant grain type (Long, Medium, or Short)
+- ≤5% broken grains
+- ≤3% discolored grains
+- Low defect rate overall
+
+**Medium Quality:**
+- ≥60% dominant grain type
+- ≤10% broken grains
+- ≤8% discolored grains
+- Moderate defect rate
+
+**Low Quality:**
+- Does not meet Medium quality criteria
+- High defect rate
+- Poor grain composition
+
+---
+
+## 3. Getting Started
+
+### 3.1 Launching the Application
+
+1. Navigate to your GrainScan installation directory
+2. Run the application:
+   ```bash
+   python test_gui.py
+   ```
+3. The main window will open with the sidebar navigation
+
+### 3.2 Interface Overview
+
+```
+┌──────────────┬─────────────────────────────────────┐
+│              │                                     │
+│  GrainScan   │         Main Content Area          │
+│   [LOGO]     │                                     │
+│              │   - Welcome Screen                  │
+│──────────────│   - Scan Results                    │
+│              │   - Analytics Dashboard             │
+│ ● Scan Image │   - Reports                         │
+│ ● Analytics  │   - Training Interface              │
+│ ● Reports    │                                     │
+│ ● Train Model│                                     │
+│ ● Choose     │                                     │
+│   Model      │                                     │
+│              │                                     │
+└──────────────┴─────────────────────────────────────┘
+```
+
+### 3.3 First-Time Setup
+
+1. **Select Your Model**:
+   - Click **"Choose Model"** in the sidebar
+   - Browse to your trained model file (e.g., `weightsV6.pt`)
+   - Click **"Save Configuration"**
+
+2. **Set Default Model** (Optional):
+   - In the "Default Model Configuration" section
+   - Browse and select your preferred default model
+   - Click **"Save as Default"**
+
+3. **Verify Setup**:
+   - Check that "Current Status" shows your model path
+   - Ensure the file exists (green checkmark)
+
+---
+
+## 4. Main Features
+
+### 4.1 Scan Image (Single)
+
+**Purpose**: Analyze a single rice grain image
+
+**Steps**:
+1. Click **"Scan Image"** in the sidebar
+2. Click **"Select Image"** button
+3. Choose your image file (JPG, PNG, BMP supported)
+4. Wait for processing (progress bar appears)
+5. View results in the pop-up window
+
+**Result Window Shows**:
+- Overall quality grade (High/Medium/Low)
+- Quality score (0.000-1.000)
+- Grain distribution breakdown
+- Annotated image with detected grains
+- Detailed statistics
+
+### 4.2 Batch Scanning
+
+**Purpose**: Process multiple images at once
+
+**Two Methods**:
+
+**A. Batch Scan (Files)**
+1. Click **"Scan Image"** → **"Batch Scan (Files)"**
+2. Select multiple image files (hold Ctrl/Cmd for multiple selection)
+3. Wait for batch processing
+4. View combined results
+
+**B. Batch Scan (Folder)**
+1. Click **"Scan Image"** → **"Batch Scan (Folder)"**
+2. Select a folder containing images
+3. All supported images will be processed
+4. View combined results
+
+**Batch Results Include**:
+- Overall batch quality (all images combined)
+- Individual image navigation (Previous/Next buttons)
+- Combined statistics
+- Annotated images for each sample
+
+### 4.3 Live Camera Capture
+
+**Purpose**: Capture and analyze rice grains in real-time
+
+**Steps**:
+1. Connect a USB camera
+2. Click **"Live Camera"** button
+3. Camera feed opens in a new window
+4. Position rice grains under camera
+5. Press **'C'** to capture
+6. Press **'Q'** or **ESC** to quit
+7. View analysis results automatically
+
+**Tips for Best Results**:
+- Use good lighting (bright, diffused light)
+- Place grains on a dark, contrasting background
+- Ensure grains are well-separated
+- Camera resolution: 1920×1080 or higher recommended
+
+---
+
+## 5. Step-by-Step Guides
+
+### 5.1 Complete Single Image Analysis
+
+**Scenario**: You have a photo of rice grains and want a quality assessment.
+
+1. **Prepare Your Image**:
+   - Take a clear photo of rice grains
+   - Use a contrasting background (dark background recommended)
+   - Ensure good lighting
+   - Separate grains (avoid overlapping)
+   - Save as JPG or PNG
+
+2. **Launch GrainScan**:
+   ```bash
+   python test_gui.py
+   ```
+
+3. **Select Image**:
+   - Click **"Select Image"**
+   - Navigate to your image
+   - Click "Open"
+
+4. **Processing**:
+   - Progress bar appears: "Scanning image..."
+   - Processing takes 2-10 seconds depending on image size
+   - Status shows "Processing complete ✔"
+
+5. **Interpret Results**:
+   
+   **Result Window Structure**:
+   ```
+   ┌─────────────────────────────────────────┐
+   │ Overall Quality: High (Score: 0.823)    │
+   ├─────────────────────────────────────────┤
+   │ Explanation: Excellent quality rice...  │
+   ├─────────────────────────────────────────┤
+   │ Premium Grains:                         │
+   │   Long + Medium: 45 grains (90.0%)      │
+   │                                         │
+   │ Defect Grains:                          │
+   │   Broken: 3 (6.0%)                      │
+   │   Discolored: 2 (4.0%)                  │
+   │                                         │
+   │ Total: 50 grains                        │
+   ├─────────────────────────────────────────┤
+   │ [Annotated Image with colored boxes]   │
+   └─────────────────────────────────────────┘
+   ```
+
+6. **Save Results**:
+   - Results automatically saved to `report/` folder
+   - CSV file: `measurements_<imagename>.csv`
+   - Annotated image: `measurements_<imagename>.jpg`
+
+### 5.2 Batch Processing Workflow
+
+**Scenario**: Quality control of 50 rice samples
+
+1. **Organize Images**:
+   ```
+   /rice_samples/
+   ├── sample_001.jpg
+   ├── sample_002.jpg
+   ├── ...
+   └── sample_050.jpg
+   ```
+
+2. **Start Batch Process**:
+   - Click **"Batch Scan (Folder)"**
+   - Select `rice_samples` folder
+   - Click "Select Folder"
+
+3. **Monitor Progress**:
+   - Progress bar: "Batch scanning... 15/50"
+   - Processing time: ~5-15 minutes for 50 images
+
+4. **Review Batch Results**:
+   
+   **Overall Batch Quality** (all images combined):
+   - Aggregate statistics from all 50 samples
+   - Combined quality grade
+   - Total grains analyzed: e.g., 2,500 grains
+   
+   **Individual Image Navigation**:
+   - Use **"Previous Image"** / **"Next Image"** buttons
+   - Review each sample's annotated image
+   - Keyboard shortcuts: ← Left Arrow, → Right Arrow
+
+5. **Export Batch Data**:
+   - Click **"Export CSV"** for combined data
+   - Click **"Export Excel"** for formatted spreadsheet
+   - Click **"Export PDF"** for printable report
+
+### 5.3 Using Live Camera
+
+**Scenario**: Real-time quality inspection on production line
+
+1. **Setup**:
+   - Mount camera above rice sample area
+   - Use LED lighting panel for consistent illumination
+   - Dark background mat underneath
+
+2. **Launch Live Capture**:
+   - Click **"Live Camera"**
+   - Camera window opens
+   - Preview feed shows: "Press 'C' to Capture, 'Q' to Quit"
+
+3. **Capture Process**:
+   - Place rice sample under camera
+   - Press **C** key to capture
+   - System analyzes immediately
+   - Results window opens automatically
+
+4. **Repeat or Exit**:
+   - For multiple captures: start Live Camera again
+   - Press **Q** or **ESC** to exit camera mode
+
+### 5.4 Viewing Reports
+
+1. **Navigate to Reports**:
+   - Click **"Reports"** in sidebar
+
+2. **Select Mode**:
+   - **Single Report Analysis**: View individual scans
+   - **Batch Report Comparison**: View batch results
+
+3. **Single Report Mode**:
+   - Dropdown shows all available reports
+   - Use **Previous/Next** buttons to navigate
+   - Keyboard shortcuts: ← / →
+   - View:
+     - Quality summary with grade and score
+     - Grain distribution chart
+     - Annotated image
+     - Detailed measurement table
+
+4. **Batch Report Mode**:
+   - Select batch manifest from dropdown
+   - Navigate between images in batch
+   - Overall batch quality displayed
+   - Individual image data shown in table
+
+5. **Export Options**:
+   - **CSV**: Raw data for analysis
+   - **Excel**: Formatted spreadsheet
+   - **PDF**: Professional report with charts
+     - Page 1: Header with summary
+     - Page 2: Grain distribution chart
+     - Page 3: Detailed data table
+
+---
+
+## 6. Quality Assessment System
+
+### 6.1 How Quality Scoring Works
+
+The system uses a **weighted scoring algorithm**:
+
+```
+Quality Score = Σ (grain_type_percentage × grain_type_weight)
+```
+
+**Grain Type Weights**:
+- Long: 1.0 (highest quality)
+- Medium: 0.8
+- Short: 0.4
+- Broken: 0.2
+- Discolored: 0.3
+
+**Example Calculation**:
+```
+Sample: 100 grains
+- 60 Long grains   → 60% × 1.0 = 0.600
+- 25 Medium grains → 25% × 0.8 = 0.200
+- 10 Short grains  → 10% × 0.4 = 0.040
+- 3 Broken grains  → 3% × 0.2  = 0.006
+- 2 Discolored     → 2% × 0.3  = 0.006
+                    ─────────────────
+Total Quality Score = 0.852 → HIGH QUALITY
+```
+
+### 6.2 Grading Criteria
+
+**Dominant Grain Type Approach**:
+
+The system identifies the dominant grain type (Long, Medium, or Short) and applies specific thresholds:
+
+**If LONG is dominant:**
+- **High Quality**: ≥80% Long, ≤15% Medium, ≤5% Short, ≤5% Broken, ≤3% Discolored
+- **Medium Quality**: ≥60% Long, ≤30% Medium, ≤10% Short, ≤10% Broken, ≤8% Discolored
+- **Low Quality**: Everything else
+
+**If MEDIUM is dominant:**
+- **High Quality**: ≥80% Medium, ≤15% Long, ≤5% Short, ≤5% Broken, ≤3% Discolored
+- **Medium Quality**: ≥60% Medium, ≤30% Long, ≤10% Short, ≤10% Broken, ≤8% Discolored
+- **Low Quality**: Everything else
+
+**If SHORT is dominant:**
+- **High Quality**: ≥80% Short, ≤15% Medium, ≤5% Long, ≤5% Broken, ≤3% Discolored
+- **Medium Quality**: ≥60% Short, ≤30% Medium, ≤10% Long, ≤10% Broken, ≤8% Discolored
+- **Low Quality**: Everything else
+
+### 6.3 Premium Grains
+
+**Premium Grains** = Long + Medium grains
+
+This metric represents the total percentage of high-quality, unbroken grains suitable for premium markets.
+
+**Industry Standards**:
+- Premium grade: ≥85% premium grains
+- Standard grade: 70-85% premium grains
+- Sub-standard: <70% premium grains
+
+### 6.4 Defect Analysis
+
+**Defect Grains** = Broken + Discolored grains
+
+**Target Thresholds**:
+- Broken grains: ≤5% (target)
+- Discolored grains: ≤3% (target)
+
+**Status Indicators** (in Analytics):
+- 🟢 **Good**: Below target thresholds
+- 🟡 **Needs Attention**: 1.0-1.5× above targets
+- 🔴 **Critical**: >2× above targets
+
+---
+
+## 7. Model Training & Fine-Tuning
+
+### 7.1 When to Train or Fine-Tune
+
+**Train from Scratch**:
+- No existing model available
+- Completely new rice varieties
+- Different imaging setup
+
+**Fine-Tune Existing Model**:
+- Improve detection accuracy
+- Add new grain variations
+- Adapt to different lighting conditions
+- **Recommended**: Start from your best model (e.g., `weightsV6.pt`)
+
+### 7.2 Preparing Your Dataset
+
+**Dataset Structure** (YOLO format):
+```
+rice_dataset/
+├── data.yaml
+├── train/
+│   ├── images/
+│   │   ├── img_001.jpg
+│   │   ├── img_002.jpg
+│   │   └── ...
+│   └── labels/
+│       ├── img_001.txt
+│       ├── img_002.txt
+│       └── ...
+└── val/
+    ├── images/
+    │   └── ...
+    └── labels/
+        └── ...
+```
+
+**data.yaml** template:
+```yaml
+path: /absolute/path/to/rice_dataset
+train: train/images
+val: val/images
+
+names:
+  0: Long
+  1: Medium
+  2: Short
+  3: Broken
+  4: Discolored
+```
+
+**Important**:
+- Use **instance segmentation annotations** (YOLO segment format)
+- Label files contain polygon coordinates, not bounding boxes
+- Minimum 100 images per class recommended
+- 80/20 train/validation split
+
+### 7.3 Fine-Tuning Step-by-Step
+
+1. **Navigate to Training**:
+   - Click **"Train Model"** in sidebar
+
+2. **Configure Dataset**:
+   - Click **"Browse Files"** under "Dataset Zip File"
+   - Select your prepared dataset (must be .zip)
+   - System validates: "✓ Dataset zip selected"
+
+3. **Select Base Model**:
+   - **Recommended**: `dataset/weightsV6.pt` (your best model)
+   - **Alternative**: `yolov8n-seg.pt` (pretrained segmentation)
+   - **Important**: Use `-seg` models for segmentation!
+   - Click **"Browse Files"** under "Starting Model Weights"
+   - Select model file
+
+4. **Set Training Parameters**:
+   
+   **For Fine-Tuning** (recommended):
+   - Epochs: 5-20 (fewer than training from scratch)
+   - Image Size: 640 (standard)
+   
+   **For Training from Scratch**:
+   - Epochs: 50-100
+   - Image Size: 640
+   
+   **GPU Recommendations**:
+   - NVIDIA GPU: Keep defaults
+   - CPU only: Reduce epochs, expect slower training
+
+5. **Start Training**:
+   - Click **"Start Training"**
+   - Progress shown in real-time log
+   - Training time: 10 minutes - 2 hours depending on:
+     - Dataset size
+     - Number of epochs
+     - GPU availability
+
+6. **Monitor Training**:
+   ```
+   Training Progress:
+   ──────────────────────────────────────
+   Unzipping dataset to dataset/training/...
+   Found data.yaml at ...
+   Normalized data.yaml paths to absolute.
+   Loading model weights: weightsV6.pt
+   Using dataset: train=...; val=...
+   Starting training ... this can take a while.
+   
+   Epoch 1/10: ████████████░░░░░░░░░░ 60%
+   ```
+
+7. **View Results**:
+   - Results appear automatically when complete
+   - **Metrics Displayed**:
+     - mAP50-95: Mean Average Precision (target: >0.7)
+     - mAP50: Precision at 50% IoU
+     - Precision: Detection accuracy
+     - Recall: Detection completeness
+   - **Results Graph**: Training curves over epochs
+   - **Model Location**: `runs/rice_train_<timestamp>/weights/best.pt`
+
+8. **Use New Model**:
+   - Copy `best.pt` to your models folder
+   - Navigate to **"Choose Model"**
+   - Select the new model
+   - Click **"Save Configuration"**
+
+### 7.4 Training Best Practices
+
+**Data Quality**:
+- ✅ High-resolution images (1920×1080 or better)
+- ✅ Consistent lighting across all images
+- ✅ Varied backgrounds to improve generalization
+- ✅ Well-separated grains (minimal overlap)
+- ❌ Avoid blurry or low-contrast images
+
+**Annotation Quality**:
+- Use precise polygon annotations
+- Include all visible grains
+- Label consistently across images
+- Review and correct annotations
+
+**Training Tips**:
+- Start with fine-tuning (faster, better results)
+- Monitor validation metrics (should improve over epochs)
+- If metrics plateau, stop training
+- Save checkpoint models every 5-10 epochs
+
+---
+
+## 8. Reports & Analytics
+
+### 8.1 Analytics Dashboard
+
+**Purpose**: Track quality trends over time
+
+**Access**: Click **"Analytics"** in sidebar
+
+**Dashboard Sections**:
+
+#### 8.1.1 KPI Overview
+
+**Key Performance Indicators**:
+
+```
+┌─────────────────┬─────────────────┬─────────────────┬──────────────┐
+│ Premium Grains  │ Broken Grains   │ Discolored      │ Total Grains │
+│     87.5%       │     4.2%        │     2.1%        │    2,547     │
+│   +2.3% ↑       │   -0.5% ↓       │   +0.1% ↑       │   +125 ↑     │
+└─────────────────┴─────────────────┴─────────────────┴──────────────┘
+```
+
+**Comparison**: Today vs. Last 7 Days
+- 🟢 Green: Improved (Premium ↑, Defects ↓)
+- 🔴 Red: Worsened (Premium ↓, Defects ↑)
+
+#### 8.1.2 Grain Composition Overview
+
+**Donut Chart**: Premium vs. Defect Grains
+**Bar Chart**: Defect levels vs. target thresholds
+
+**Quality Status**:
+- 🟢 **Good**: All metrics within acceptable ranges
+- 🟡 **Needs Attention**: Some defects above targets
+- 🔴 **Critical**: Defects significantly above targets
+
+#### 8.1.3 Time Range Filters
+
+- **All time**: Complete historical data
+- **Last 7 days**: Weekly trends
+- **Last 30 days**: Monthly trends
+- **Today**: Current day only
+
+#### 8.1.4 Clear Analytics
+
+**Purpose**: Archive old data to start fresh
+
+**Process**:
+1. Click **"Clear analytics"**
+2. Confirm action
+3. Files moved to `report/backup/<date>/`
+4. Analytics reset
+
+**Important**: Data is archived, not deleted!
+
+### 8.2 Report Viewing
+
+**Two Modes**:
+
+#### 8.2.1 Single Report Analysis
+
+**View individual scan results**:
+
+1. **Navigate Reports**:
+   - Use dropdown to select report
+   - Or use Previous/Next buttons
+   - Keyboard: ← / → arrows
+
+2. **Information Displayed**:
+   - **Report Summary**:
+     - File name and date
+     - Quality grade with score
+     - Total grains analyzed
+     - Premium grains percentage
+     - Grain distribution (Long/Medium/Short/Broken/Discolored)
+   
+   - **Visual Analysis**:
+     - Annotated image with color-coded detections
+     - Detection color legend
+     - Click image to view full size
+   
+   - **Grain Distribution Chart**:
+     - Bar chart showing grain type counts
+     - Percentages for each category
+   
+   - **Detailed Data Table**:
+     - Grain#, Class, Confidence, Coordinates
+     - Sortable and scrollable
+
+#### 8.2.2 Batch Report Comparison
+
+**View batch processing results**:
+
+1. **Select Batch**: Choose from batch manifest dropdown
+2. **Overall Batch Quality**: Combined statistics from all images
+3. **Navigate Images**: Use Previous/Next to view individual images
+4. **Comparison**: See overall batch grade vs. individual samples
+
+### 8.3 Export Options
+
+#### 8.3.1 CSV Export
+
+**Single Mode**:
+- Exports individual report CSV
+- Columns: Grain#, Class, Confidence, Center X, Center Y, X1, Y1, X2, Y2
+
+**Batch Mode**:
+- Exports COMBINED data from all images
+- Additional column: Source_Image (identifies which image each grain came from)
+
+**Use Cases**:
+- Data analysis in Excel/Python
+- Integration with other systems
+- Statistical analysis
+
+#### 8.3.2 Excel Export
+
+**Features**:
+- Formatted spreadsheet with proper column widths
+- Freeze panes for headers
+- Same data as CSV but better formatted
+
+**System Requirement**:
+```bash
+pip install openpyxl
+```
+
+#### 8.3.3 PDF Export
+
+**Single Report PDF** (3 pages):
+1. **Page 1**: Header with annotated image and summary statistics
+2. **Page 2**: Grain distribution chart (bar chart with percentages)
+3. **Page 3**: Detailed measurement data table
+
+**Batch Report PDF** (2 pages):
+1. **Page 1**: Header with overall batch chart and summary
+2. **Page 2**: Combined data table from all images
+
+**Use Cases**:
+- Professional reports for clients
+- Quality control documentation
+- Archival records
+- Presentations
+
+---
+
+## 9. Troubleshooting
+
+### 9.1 Common Issues
+
+#### Issue: "No rice grains detected"
+
+**Causes**:
+- Poor image quality (blurry, low contrast)
+- Non-rice objects in image
+- Grains too small or too large
+- Poor lighting
+
+**Solutions**:
+1. **Improve Image Quality**:
+   - Use higher resolution camera (≥1920×1080)
+   - Ensure sharp focus
+   - Use bright, diffused lighting
+
+2. **Optimize Background**:
+   - Use dark, contrasting background
+   - Remove non-rice objects
+   - Ensure clean surface
+
+3. **Adjust Camera**:
+   - Position camera closer/farther for appropriate grain size
+   - Aim for grains to be 100-300 pixels long in image
+
+4. **Check Model**:
+   - Verify correct model is loaded (Choose Model)
+   - Ensure model file exists and is valid
+
+#### Issue: "Camera not found" or "Failed to initialize camera"
+
+**Solutions**:
+1. **Check Camera Connection**:
+   - Verify USB cable is connected
+   - Try different USB port
+   - Check camera is not in use by another application
+
+2. **Camera Permissions**:
+   - Windows: Check camera privacy settings
+   - Grant application camera access
+
+3. **Driver Issues**:
+   - Update camera drivers
+   - Restart computer
+
+4. **Try Different Resolution**:
+   - System automatically tries multiple resolutions
+   - If all fail, camera may not be compatible
+
+#### Issue: "Model inference failed"
+
+**Solutions**:
+1. **Check Model File**:
+   - Navigate to **Choose Model**
+   - Verify model path is correct
+   - Ensure .pt file exists
+
+2. **Model Type**:
+   - For segmentation: Use `-seg` models (e.g., `yolov8n-seg.pt`)
+   - For detection: Regular models work but less accurate
+   - Check model type indicator in Choose Model section
+
+3. **Reinstall Model**:
+   - Download fresh model file
+   - Reconfigure in settings
+
+#### Issue: "Training failed" or "Dataset paths not found"
+
+**Solutions**:
+1. **Check data.yaml**:
+   - Ensure paths are correct
+   - Use absolute paths (not relative)
+   - Example:
+     ```yaml
+     path: C:/Users/YourName/rice_dataset
+     train: train/images
+     val: val/images
+     ```
+
+2. **Validate Dataset Structure**:
+   ```
+   ✓ Correct structure:
+   dataset/
+   ├── data.yaml
+   ├── train/images/ (contains .jpg files)
+   ├── train/labels/ (contains .txt files)
+   ├── val/images/
+   └── val/labels/
+   
+   ✗ Incorrect: Missing folders or files
+   ```
+
+3. **Check Annotations**:
+   - Label files must match image names
+   - Format: YOLO segmentation (normalized polygons)
+   - Each line: `class_id x1 y1 x2 y2 x3 y3 ...`
+
+4. **Use Correct Model Type**:
+   - For instance segmentation datasets: use `-seg` models
+   - Detection models will fail with segmentation data
+
+#### Issue: Poor detection accuracy
+
+**Solutions**:
+1. **Image Quality**:
+   - Use consistent lighting
+   - Ensure high resolution
+   - Avoid shadows and glare
+
+2. **Fine-tune Model**:
+   - Collect 50-100 images with poor detection
+   - Annotate correctly
+   - Fine-tune existing model (10-20 epochs)
+
+3. **Adjust Confidence Threshold**:
+   - Edit `test_main.py` line 127:
+     ```python
+     conf_th = 0.4  # Lower = more detections (more false positives)
+     ```
+
+### 9.2 Performance Issues
+
+#### Issue: Slow processing
+
+**Solutions**:
+1. **Use GPU**:
+   - Install CUDA-enabled PyTorch
+   - Verify GPU is detected:
+     ```python
+     import torch
+     print(torch.cuda.is_available())  # Should return True
+     ```
+
+2. **Reduce Image Size**:
+   - System auto-resizes to 1920×1080
+   - For faster processing, edit `MAX_WIDTH` and `MAX_HEIGHT` in `test_main.py`
+
+3. **Batch Processing**:
+   - Use batch mode for multiple images (more efficient)
+
+#### Issue: High memory usage
+
+**Solutions**:
+1. **Close Unused Applications**
+2. **Process Smaller Batches**
+3. **Use Smaller Model**:
+   - `yolov8n-seg.pt` (nano) instead of `yolov8m-seg.pt` (medium)
+
+### 9.3 Export Issues
+
+#### Issue: Excel export fails
+
+**Solution**:
+```bash
+pip install openpyxl
+```
+
+#### Issue: PDF export fails
+
+**Solution**:
+```bash
+pip install matplotlib openpyxl
+```
+
+---
+
+## 10. Technical Reference
+
+### 10.1 File Structure
+
+```
+GrainScan/
+├── test_gui.py              # Main GUI application
+├── test_main.py             # Image processing & YOLO inference
+├── live_camera.py           # Live camera capture module
+├── quality_assessment.py    # Quality grading algorithm
+├── test_quality_system.py   # Testing script
+├── config.json              # User configuration (auto-generated)
+├── dataset/                 # Models and training data
+│   ├── weightsV6.pt        # Trained model (example)
+│   └── training/           # Training runs
+├── report/                  # Generated reports
+│   ├── measurements_*.csv  # Detection data
+│   ├── measurements_*.jpg  # Annotated images
+│   ├── batch_*.json        # Batch manifests
+│   └── backup/             # Archived data
+├── runs/                    # Training output
+│   └── rice_train_*/       # Training run folders
+└── GUI/                     # GUI assets
+    ├── logo1.png
+    ├── icon2.png
+    └── *.png               # Icons
+```
+
+### 10.2 Configuration File (config.json)
+
+**Location**: Project root directory
+
+**Structure**:
+```json
+{
+  "model_path": "dataset/weightsV6.pt",
+  "default_model_path": "dataset/weightsV6.pt"
+}
+```
+
+**Fields**:
+- `model_path`: Currently active model (used for all operations)
+- `default_model_path`: Default model (used when clicking "Use Default Model")
+
+**Manual Editing**:
+You can edit this file directly, but prefer using the GUI (Choose Model section).
+
+### 10.3 Output Files
+
+#### CSV Format (measurements_*.csv)
+
+```csv
+Grain#,Class,Confidence,Center X,Center Y,X1,Y1,X2,Y2
+1,Long,0.9543,523,412,510,398,536,426
+2,Medium,0.8921,678,445,662,431,694,459
+3,Broken,0.7654,234,567,220,555,248,579
+...
+```
+
+**Columns**:
+- **Grain#**: Sequential ID
+- **Class**: Long/Medium/Short/Broken/Discolored
+- **Confidence**: Model confidence (0.0-1.0)
+- **Center X, Center Y**: Center coordinates (pixels)
+- **X1, Y1, X2, Y2**: Bounding box coordinates (pixels)
+
+#### Batch Manifest (batch_*.json)
+
+```json
+{
+  "batch_id": "20251205_143022",
+  "created_at": "20251205_143022",
+  "items": [
+    {
+      "file": "sample_001.jpg",
+      "csv_path": "report/measurements_sample_001.csv",
+      "image_path": "report/measurements_sample_001.jpg",
+      "grade": "High",
+      "total": 54,
+      "counts": {"Long": 42, "Medium": 9, ...},
+      "percents": {"Long": 77.8, "Medium": 16.7, ...}
+    },
+    ...
+  ]
+}
+```
+
+### 10.4 Model Files
+
+**Supported Models**:
+1. **Custom Trained** (recommended):
+   - `weightsV6.pt`, `weightsV4.pt`, etc.
+   - Trained on rice grain dataset
+   - Best accuracy for rice grains
+
+2. **YOLOv8 Segmentation** (pretrained):
+   - `yolov8n-seg.pt` (nano - fastest)
+   - `yolov8s-seg.pt` (small)
+   - `yolov8m-seg.pt` (medium)
+   - `yolov8l-seg.pt` (large)
+   - `yolov8x-seg.pt` (extra large)
+
+3. **YOLOv8 Detection** (fallback):
+   - `yolov8n.pt`, `yolov8s.pt`, etc.
+   - Lower accuracy than segmentation
+
+**Model Selection Priority**:
+1. Environment variable: `GRAINSCAN_MODEL`
+2. config.json: `model_path`
+3. Fallback candidates (first existing):
+   - `dataset/weightsV6.pt`
+   - `dataset/weightsV4.pt`
+   - `yolov8n-seg.pt`
+   - `yolov8n.pt`
+
+### 10.5 Environment Variables
+
+**GRAINSCAN_GUI**:
+- Set automatically by GUI
+- Suppresses verbose output and cv2 windows
+- Value: "1" when running from GUI
+
+**GRAINSCAN_MODEL**:
+- Override model path
+- Set in Choose Model section
+- Example: `C:/Models/rice_best.pt`
+
+**Setting Environment Variables** (advanced):
+
+Windows:
+```cmd
+set GRAINSCAN_MODEL=C:\Models\rice_best.pt
+python test_gui.py
+```
+
+Linux/Mac:
+```bash
+export GRAINSCAN_MODEL=/path/to/model.pt
+python test_gui.py
+```
+
+### 10.6 Color Scheme Reference
+
+**Application Colors**:
+```python
+COLORS = {
+    'primary': '#B7C02B',      # Lime green (main buttons)
+    'secondary': '#a4ad29',    # Darker green (hover)
+    'success': '#27AE60',      # Green (Long grains)
+    'warning': '#F1C40F',      # Yellow (warnings)
+    'error': '#E74C3C',        # Red (Broken grains)
+    'orange': '#FF8C00',       # Orange (Medium grains)
+    'purple': '#B400B4',       # Purple (Discolored grains)
+    'background': '#FFFFFF',   # White
+    'text': '#2C3E50',         # Dark blue-gray
+    'card_bg': '#F8F9FA',      # Light gray
+}
+```
+
+**Detection Colors** (in annotated images):
+- 🟢 Long: `(0, 200, 0)` RGB
+- 🟠 Medium: `(255, 165, 0)` RGB
+- 🔵 Short: `(0, 140, 255)` RGB
+- 🟣 Discolored: `(180, 0, 180)` RGB
+- 🔴 Broken: `(255, 0, 0)` RGB
+
+### 10.7 System Parameters
+
+**Image Processing** (test_main.py):
+```python
+MAX_WIDTH = 1920           # Max image width
+MAX_HEIGHT = 1080          # Max image height
+STRICT_MODE = False        # Strict filtering (False recommended)
+MIN_GRAINS_REQUIRED = 1    # Minimum detections to proceed
+MIN_PREFILTER_GRAINS = 3   # Pre-filter threshold
+MIN_WHITE_RATIO = 0.005    # Minimum white pixels ratio
+```
+
+**Camera Settings** (live_camera.py):
+```python
+MAX_WIDTH = 3840           # Support up to 4K
+MAX_HEIGHT = 2160          # Support up to 4K
+DISPLAY_SCALE = 0.9        # Display window scale
+CAMERA_RESOLUTIONS = [     # Resolutions to try
+    (3840, 2160),          # 4K UHD
+    (1920, 1080),          # Full HD
+    (1280, 720),           # HD
+    (640, 480)             # VGA
+]
+```
+
+**Quality Thresholds** (quality_assessment.py):
+```python
+# Grain type weights
+'Long': {'weight': 1.0}
+'Medium': {'weight': 0.8}
+'Short': {'weight': 0.4}
+'Broken': {'weight': 0.2}
+'Discolored': {'weight': 0.3}
+
+# High quality thresholds
+'dominant_min': 80.0%      # Minimum dominant grain
+'broken_max': 5.0%         # Maximum broken
+'discolored_max': 3.0%     # Maximum discolored
+```
+
+---
+
+## 11. Best Practices
+
+### 11.1 Image Capture
+
+**Lighting**:
+- Use diffused light (softbox or cloudy daylight)
+- Avoid direct sunlight (creates harsh shadows)
+- Consistent lighting across all samples
+
+**Background**:
+- Dark, matte background (black velvet ideal)
+- High contrast with white/light rice grains
+- Clean, flat surface
+
+**Camera Setup**:
+- Mount camera perpendicular to surface
+- Fixed distance (consistent scale)
+- Focus on center of sampling area
+
+**Sample Preparation**:
+- Spread grains in single layer
+- Avoid overlapping grains
+- Use consistent sample size (50-100 grains)
+- Remove foreign objects
+
+### 11.2 Batch Processing
+
+**Organization**:
+- Use consistent naming: `sample_001.jpg`, `sample_002.jpg`, etc.
+- Group related samples in folders
+- Include metadata in filename if needed
+
+**Processing Strategy**:
+- Process 10-50 images per batch
+- For larger datasets, split into multiple batches
+- Regular intervals (e.g., hourly, daily)
+
+**Quality Control**:
+- Review batch results for anomalies
+- Check individual images if overall quality is unexpected
+- Investigate outliers
+
+### 11.3 Model Management
+
+**Version Control**:
+- Keep previous model versions
+- Naming: `weights_v1.pt`, `weights_v2.pt`, etc.
+- Document changes and improvements
+
+**Testing**:
+- Test new models on validation set before deployment
+- Compare metrics with previous version
+- Ensure accuracy improvements
+
+**Backup**:
+- Backup trained models regularly
+- Store in multiple locations
+- Include training configuration
+
+### 11.4 Data Management
+
+**Report Archiving**:
+- Monthly: Use "Clear analytics" to archive
+- Backup archived data externally
+- Keep organized by date/batch
+
+**CSV/Excel Management**:
+- Export important results to Excel
+- Create summary spreadsheets
+- Use pivot tables for analysis
+
+**Long-term Storage**:
+- Compress old images and reports
+- Cloud backup recommended
+- Maintain minimum 1-year retention
+
+---
+
+## 12. Advanced Topics
+
+### 12.1 Custom Model Architecture
+
+For advanced users wanting to modify the detection pipeline:
+
+**Key Files**:
+- `test_main.py`: Lines 116-289 (run_yolo_classification function)
+- Adjust confidence thresholds: Line 127
+- Modify detection filters: Lines 163-249
+
+### 12.2 API Integration
+
+**Calling from Python Scripts**:
+
+```python
+from test_main import process_image
+
+# Process single image
+result = process_image("path/to/image.jpg")
+print(f"Quality Grade: {result['grade']}")
+print(f"Score: {result['score']}")
+print(f"Total Grains: {result['total']}")
+```
+
+**Quality Assessment Only**:
+
+```python
+from quality_assessment import assess_rice_quality_from_csv
+
+result = assess_rice_quality_from_csv("report/measurements_sample.csv")
+print(f"Grade: {result['grade']}")
+```
+
+### 12.3 Customizing Quality Criteria
+
+Edit `quality_assessment.py` to customize grading:
+
+**Adjust Weights** (Lines 14-38):
+```python
+'Long': {
+    'weight': 1.0,  # Change to adjust Long grain importance
+    ...
+}
+```
+
+**Modify Thresholds** (Lines 43-92):
+```python
+'High': {
+    'dominant_min': 80.0,  # Change minimum % for High grade
+    'broken_max': 5.0,     # Change max broken for High grade
+    ...
+}
+```
+
+### 12.4 Multi-Camera Setup
+
+For production environments with multiple cameras:
+
+1. **Identify Cameras**:
+   ```python
+   # In live_camera.py, change line 105:
+   cap = cv2.VideoCapture(0)  # Change 0 to 1, 2, etc.
+   ```
+
+2. **Run Multiple Instances**:
+   - Launch separate GrainScan instances
+   - Each configured for different camera
+
+3. **Centralized Processing**:
+   - Save to network shared folder
+   - Use batch processing for centralized analysis
+
+---
+
+## 13. Frequently Asked Questions (FAQ)
+
+### Q1: What image formats are supported?
+**A**: JPG, JPEG, PNG, and BMP formats are fully supported.
+
+### Q2: Can I process images from a microscope?
+**A**: Yes, but ensure proper scaling. The system works best with whole grain images (not microscopic views of single grains).
+
+### Q3: How accurate is the quality assessment?
+**A**: With a well-trained model, accuracy is typically 90-95% compared to human experts. Accuracy depends on:
+- Model training quality
+- Image quality
+- Consistent imaging conditions
+
+### Q4: Can I use this for other grain types (wheat, barley)?
+**A**: The system is designed for rice but can be adapted:
+- Collect new training dataset for other grains
+- Adjust quality criteria in `quality_assessment.py`
+- Train new model with appropriate classes
+
+### Q5: How many images should I use for training?
+**A**: Recommended:
+- Minimum: 100 images per class
+- Good: 500+ images per class
+- Excellent: 1000+ images per class
+
+### Q6: What's the difference between detection and segmentation models?
+**A**:
+- **Detection**: Bounding boxes around objects (less precise)
+- **Segmentation**: Pixel-level masks (more accurate, recommended)
+
+### Q7: Can I run this without a GPU?
+**A**: Yes, but processing will be slower:
+- CPU: 5-15 seconds per image
+- GPU: 1-3 seconds per image
+
+### Q8: How do I improve detection of small/broken grains?
+**A**:
+1. Use higher resolution images
+2. Fine-tune model with more examples of small grains
+3. Adjust confidence threshold (lower = more detections)
+
+### Q9: Can I export data to external systems?
+**A**: Yes, CSV export provides raw data for integration with:
+- Excel/Google Sheets
+- Custom analysis scripts
+- Database systems
+- ERP/QC software
+
+### Q10: What if my rice variety isn't classified correctly?
+**A**: Train a custom model:
+1. Collect 100+ images of your variety
+2. Annotate with correct labels
+3. Fine-tune existing model (10-20 epochs)
+4. Deploy new model
+
+---
+
+## 14. Glossary
+
+**Terms and Definitions**:
+
+- **Annotation**: Labels on training images indicating object locations and classes
+- **Batch Processing**: Analyzing multiple images in one operation
+- **Bounding Box**: Rectangular box around detected object
+- **Confidence**: Model's certainty about a detection (0.0-1.0)
+- **Defect Grains**: Broken and discolored grains combined
+- **Detection**: Identifying and locating objects in images
+- **Dominant Grain**: The most common grain type in a sample
+- **Epoch**: One complete pass through the training dataset
+- **Fine-Tuning**: Training an existing model with new data
+- **GPU**: Graphics Processing Unit (accelerates AI processing)
+- **Instance Segmentation**: Detecting and outlining individual objects
+- **IoU**: Intersection over Union (overlap measure for detections)
+- **KPI**: Key Performance Indicator
+- **mAP**: Mean Average Precision (detection accuracy metric)
+- **Model**: Trained AI algorithm for detection/classification
+- **NMS**: Non-Maximum Suppression (removes duplicate detections)
+- **Premium Grains**: Long and Medium grains (high quality)
+- **Quality Score**: Weighted score indicating overall rice quality
+- **ROI**: Region of Interest (specific area in image)
+- **Segmentation**: Pixel-level object detection
+- **Training**: Process of teaching AI model from labeled data
+- **Validation Set**: Images used to test model during training
+- **YOLO**: You Only Look Once (real-time object detection algorithm)
+
+---
+
+## 15. Support and Contact
+
+### Getting Help
+
+**Documentation**:
+- This user manual (comprehensive reference)
+- In-app tooltips and guides
+
+**Community**:
+- Check GitHub repository for issues/discussions
+- Search existing issues before posting
+
+**Reporting Bugs**:
+1. Document the issue (screenshots helpful)
+2. Note error messages
+3. Include system information (OS, Python version)
+4. Describe steps to reproduce
+
+**Feature Requests**:
+- Suggest improvements via GitHub issues
+- Describe use case and expected behavior
+
+---
+
+## 16. Appendix
+
+### A. Keyboard Shortcuts
+
+| Shortcut | Action | Context |
+|----------|--------|---------|
+| ← Left Arrow | Previous report/image | Reports section |
+| → Right Arrow | Next report/image | Reports section |
+| C | Capture image | Live camera |
+| Q or ESC | Quit/Close | Live camera |
+
+### B. Sample Workflows
+
+**Workflow 1: Daily Quality Inspection**
+```
+1. Launch GrainScan
+2. Click Live Camera
+3. Place sample under camera
+4. Press C to capture
+5. Review results
+6. Record in log
+7. Repeat for next sample
+```
+
+**Workflow 2: Weekly Batch Analysis**
+```
+1. Collect week's images in folder
+2. Launch GrainScan → Batch Scan (Folder)
+3. Select folder
+4. Wait for processing
+5. Review batch analytics
+6. Export PDF report
+7. Archive in weekly reports folder
+```
+
+**Workflow 3: Model Improvement**
+```
+1. Identify poorly detected samples
+2. Annotate 50-100 images correctly
+3. Package as YOLO dataset (.zip)
+4. Navigate to Train Model
+5. Select dataset and base model
+6. Set epochs to 10-15
+7. Start training
+8. Test new model
+9. Deploy if improved
+```
+
+### C. Quick Reference Card
+
+```
+┌─────────────────────────────────────────────────┐
+│         GrainScan Quick Reference               │
+├─────────────────────────────────────────────────┤
+│ GRAIN CLASSES:                                  │
+│  🟢 Long     = 6.61-7.50mm (Premium)           │
+│  🟠 Medium   = 5.51-6.60mm (Standard)          │
+│  🔵 Short    = <5.50mm (Sub-standard)          │
+│  🔴 Broken   = Fragmented grains               │
+│  🟣 Discolored = Damaged/discolored            │
+│                                                 │
+│ QUALITY GRADES:                                 │
+│  High    = ≥80% dominant, ≤5% broken, ≤3% disc.│
+│  Medium  = ≥60% dominant, ≤10% broken, ≤8% disc│
+│  Low     = Below Medium criteria               │
+│                                                 │
+│ SHORTCUTS:                                      │
+│  ← / → = Navigate reports                      │
+│  C     = Capture (live camera)                 │
+│  Q/ESC = Quit camera                           │
+│                                                 │
+│ EXPORT:                                         │
+│  CSV   = Raw data                              │
+│  Excel = Formatted spreadsheet                 │
+│  PDF   = Professional report                   │
+└─────────────────────────────────────────────────┘
+```
+
+---
+
+## Document Information
+
+**Version**: 1.0  
+**Last Updated**: December 2025  
+**Document Type**: User Manual  
+**Software**: GrainScan - Automated Rice Quality Inspection  
+**Author**: System Documentation  
+
+---
+
+**End of User Manual**
+
+For the latest updates and additional resources, please refer to the project repository.
+

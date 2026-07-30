@@ -1,0 +1,26 @@
+# Core dependencies
+numpy>=1.24.0,<2.0.0
+opencv-python>=4.8.0
+Pillow>=10.0.0
+pandas>=2.0.0
+python-dateutil>=2.8.2
+matplotlib>=3.7.0
+scikit-image>=0.25.2
+scikit-learn>=1.6.1
+joblib>=1.2.0
+imageio>=2.33,!=2.35.0
+lazy-loader>=0.4
+
+# Machine Learning dependencies
+ultralytics==8.3.99
+torch==2.2.2
+tensorflow-intel==2.18.0
+
+# Additional dependencies
+h5py>=3.11.0
+keras>=3.5.0
+networkx>=3.0.0
+fsspec>=2023.0.0
+jinja2>=3.0.0
+
+# Note: tkinter is a built-in Python package and does not need to be installed via pip 

@@ -1,0 +1,44 @@
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+
+# Local IDE / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# PyInstaller / installer outputs
+.dist/
+installer_output/
+*.spec.bak
+
+# Runtime outputs (created by the app)
+report/
+runs/
+analytics_exports/
+
+# Training artifacts & raw datasets (keep shipped weights)
+dataset/training/
+dataset/v17/
+dataset/**/*.zip
+dataset/last.pt
+dataset/*Copy*.pt
+
+# Temp / scratch
+temp_chunk*.txt
+*.log
+*.tmp
